@@ -1,11 +1,11 @@
 <%-- 
     Document   : addexpense
-    Created on : 20-Nov-2026, 4:15:53 pm
+    Created on : 20-Nov-2026, 4:51:03 pm
     Author     : Ravindra Ji
 --%>
 
 
-<%@page import="java.util.ArrayList"%>
+<%@page import="java.sql.*"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
 <%
@@ -13,37 +13,46 @@
     String category = request.getParameter("category");
     String amount = request.getParameter("amount");
 
-    ArrayList<String[]> expenses =
-        (ArrayList<String[]>)session.getAttribute("expenses");
-
-    if(expenses == null)
+    Connection con = null;
+    PreparedStatement ps = null;
+    
+    try
     {
-        expenses = new ArrayList<String[]>();
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3306/expense_tracker",
+                "root",
+                ""
+        );
+        
+        String sql = "INSERT INTO expenses"
+                   +"(expense_name, category, amount)"
+                   +"VALUES (?,?,?)";
+        
+        ps = con.prepareStatement(sql);
+        
+        ps.setString(1, name);
+        ps.setString(2, category);
+        ps.setBigDecimal(3, new java.math.BigDecimal(amount));
+        
+        ps.executeUpdate();
+        
+        out.println("<<h2>Expense Added Successfully!</h2>");
+        out.println("<p>Expense Name: " + name + "</p>");
+        out.println("<p>Category: " + category + "</p>");
+        out.println("<p>Amount: Rs. " + amount + "</p>");
     }
+    catch(Exception e)
+    {
+        out.println("Database Error: " + e.getMessage());
+    }
+    finally
+    {
+        if(ps != null) ps.close();
+        if(con != null) con.close();
+    }
+%>     
 
-    String data[] = {name, category, amount};
-
-    expenses.add(data);
-
-    session.setAttribute("expenses", expenses);
-%>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Expense Added</title>
-</head>
-<body>
-
-    <h1>Personal Expense Tracker</h1>
-
-    <h2>Expense Added Successfully!</h2>
-
-    <p>Expense Name: <%=name%></p>
-
-    <p>Category: <%=category%></p>
-
-    <p>Amount: Rs. <%=amount%></p>
 
     <br>
 
@@ -55,3 +64,4 @@
 
 </body>
 </html>
+
